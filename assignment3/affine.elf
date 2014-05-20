@@ -1,0 +1,6 @@
+%% Affine Expressions
+affine : exp -> type.
+
+aff_all : affine E
+		<- linear E
+		<- relevant E.

@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+\bibitem{Honsell}
+Marino~Miculan Furio~Honsell and Ivan Scagnetto.
+\newblock $\pi$-calculus in (co)inductive type theory.
+\newblock URL: {\tt http://www.dimi.uniud.it/~honsell/pap.html}.
+
+\bibitem{Twelf}
+Frank Pfenning.
+\newblock Computation and deduction, 2000.
+\newblock URL: {\tt http://www.twelf.org}.
+
+\bibitem{PiCalc}
+Joachim~Parrow Robin~Milner and David Walker.
+\newblock A calculus of mobile processes, part {\rm 1}.
+\newblock {\em Information and Computation}, 100(1):1--40, 1992.
+
+\end{thebibliography}

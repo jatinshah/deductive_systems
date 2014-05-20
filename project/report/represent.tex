@@ -1,0 +1,27 @@
+\begin{verbatim}
+% Lambda-calculus
+
+exp : type.
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+
+% Operational semantics of Lambda calculus
+
+eval     : exp -> exp -> type.
+eval_lam : eval (lam E) (lam E).
+eval_app : eval (app E1 E2) V <- eval E1 (lam E1') <- eval (E1' E2) V.
+
+% Embed Lambda calculus into Pi-calculus
+
+conv     : exp -> (name -> proc) -> type.
+conv_lam : conv (lam E) ([u:name] in_pref u ([z:name] (in_pref u (P z))))
+           <- ({x:exp}{y:name} conv x ([u:name] (out_pref y u nil))  
+                                             -> conv (E x) (P y)).
+
+
+conv_app : conv (app E1 E2) ([u:name] nu ([v:name] (P1 v | 
+                nu ([x:name] (out_pref v x (out_pref v u (in_pref x P2)))))))
+                <- conv E1 P1
+                <- conv E2 P2.
+\end{verbatim}

@@ -1,0 +1,36 @@
+%% Linear Expressions
+linear : exp -> type.
+
+ln_z : linear z.
+
+ln_s : linear (s E) 
+	<- linear E.
+
+ln_case : linear (case E1 E2 E3)
+		<- linear E1
+		<- linear E2
+		<- ({x:exp} linear x -> linear (E3 x))
+		<- ({x:exp} once x -> once (E3 x)).
+
+ln_pair : linear (pair E1 E2)
+		<- linear E1
+		<- linear E2.
+
+ln_fst : linear (fst E)
+		<- linear E.
+
+ln_snd : linear (snd E)
+		<- linear E.
+
+ln_lam : linear (lam E)
+		<- ({x:exp} linear x -> linear (E x))
+		<- ({x:exp} once x -> once (E x)).
+
+ln_app : linear (app E1 E2)
+		<- linear E1
+		<- linear E2.
+
+ln_letv : linear (letv E1 E2)
+		<- linear E1
+		<- ({x:exp} linear x -> linear (E2 x))
+		<- ({x:exp} once x -> once (E2 x)).

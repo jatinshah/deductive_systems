@@ -1,0 +1,221 @@
+%% Pi-Calculus
+%% Author: Jatin Shah
+
+% Encoding of Processes
+proc : type.
+name : type.
+
+nil      : proc.
+!        : proc -> proc.                         %prefix 11 !.
+tau_pref : proc -> proc.
+|        : proc -> proc -> proc.                 %infix left 10  |.
++        : proc -> proc -> proc.                 %infix left 9 +.
+nu       : (name -> proc) -> proc.
+match    : name -> name -> proc -> proc.
+mismatch : name -> name -> proc -> proc.
+in_pref  : name -> (name -> proc) -> proc.
+repl_pref : name -> (name -> proc) -> proc.
+out_pref  : name -> name -> proc -> proc.
+
+% Encoding of Actions
+f_act : type.
+b_act : type.
+
+tau : f_act.
+out : name -> name -> f_act.
+
+in : name -> b_act.
+bOut : name -> b_act.
+
+
+% Operational semantics of the pi-calculus
+f_trans : proc -> f_act -> proc -> type.
+b_trans : proc -> b_act -> (name -> proc) -> type.    
+
+
+% Free Actions
+
+% fTAU : f_trans (tau_pref P) tau P.
+
+fOUT : f_trans (out_pref X Y P) (out X Y) P.
+
+fSUM1 : f_trans P1 A P -> f_trans (P1 + P2) A P.
+
+fSUM2 : f_trans P2 A P -> f_trans (P1 + P2) A P.
+
+fPAR1 : f_trans P1 A P -> f_trans (P1 | P2) A (P | P2).
+
+fPAR2 : f_trans P2 A P -> f_trans (P1 | P2) A (P1 | P).
+
+fMATCH : f_trans P A Q -> f_trans (match X X P) A Q.
+
+% fMISMATCH : f_trans
+
+fBANG : f_trans (P | (! P)) A Q -> f_trans (! P) A Q.
+
+fREPL : f_trans (in_pref X ([u:name] (P u | repl_pref X P))) A Q -> f_trans (repl_pref X P) A Q.
+
+COM1 : b_trans P1 (in X) Q1 -> f_trans P2 (out X Y) Q2 -> f_trans (P1 | P2) tau ((Q1 Y) | Q2). 
+
+COM2 : b_trans P2 (in X) Q2 -> f_trans P1 (out X Y) Q1 -> f_trans (P1 | P2) tau (Q1 | (Q2 Y)).
+
+fRES : ({y:name} f_trans (P y) A (P' y)) -> f_trans (nu P) A (nu P'). 
+
+CLOSE1 : b_trans P1 (in X) Q1 -> b_trans P2 (bOut X) Q2 -> f_trans (P1 | P2) tau (nu [Z:name] ((Q1 Z) | (Q2 Z))).
+
+CLOSE2 : b_trans P2 (in X) Q2 -> b_trans P1 (bOut X) Q1 -> f_trans (P1 | P2) tau (nu [Z:name] ((Q1 Z) | (Q2 Z))).
+
+% Bound Actions
+
+IN : b_trans (in_pref X P) (in X) P.
+
+bSUM1 : b_trans P1 A P -> b_trans (P1 + P2) A P.
+
+bSUM2 : b_trans P2 A P -> b_trans (P1 + P2) A P.
+
+bPAR1 : b_trans P1 A P -> b_trans (P1 | P2) A ([X:name] ((P X) | P2)).
+
+bPAR2 : b_trans P2 A P -> b_trans (P1 | P2) A ([X:name] (P1 | (P X))).
+
+bMATCH : b_trans P A Q -> b_trans (match X X P) A Q.
+
+% bMISMATCH :
+
+
+bBANG : b_trans (P | (! P)) A Q -> b_trans (! P) A Q.
+
+bREPL : b_trans (in_pref X ([u:name] (P u | repl_pref X P))) A Q -> b_trans (repl_pref X P) A Q.
+
+bRES : ({y:name} b_trans (P y) A (P' y)) -> b_trans (nu P) A  ([Z:name] (nu (P' Z))).
+
+OPEN : b_trans (nu P1) (bOut X) P2 <- ({y:name} f_trans (P1 y) (out X y) (P2 y)). 
+
+% Some Simplification Rules
+SIMPL1 : f_trans (P | nil) tau P.
+
+SIMPL2 : f_trans (nil | P) tau P.
+
+
+
+% lambda-calculus
+
+exp : type.
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+
+% Operational semantics of lambda calculus
+
+eval : exp -> exp -> type.
+
+eval_lam : eval (lam E) (lam E).
+eval_app : eval (app E1 E2) V <- eval E1 (lam E1') <- eval (E1' E2) V.
+
+% Embed lambda calculus into pi calculus
+
+conv : exp -> (name -> proc) -> type.
+
+conv_lam : conv (lam E) ([u:name] in_pref u ([z:name] (in_pref u (P z))))
+	    <- ({x:exp}{y:name} conv x ([u:name] (out_pref y u nil)) -> conv (E x) (P y)).
+
+conv_app : conv (app E1 E2) ([u:name] nu ([v:name] (P1 v | nu ([x:name] (out_pref v x (out_pref v u (repl_pref x P2)))))))
+		<- conv E2 P2
+		<- conv E1 P1.
+
+
+% Transition System
+trans : proc -> proc -> type.
+
+trans_* : trans Q S
+	   <- f_trans Q X R
+	   <- trans R S.
+
+trans_tau : trans (tau_pref P) P.
+
+trans_1 : trans Q Q.
+
+% query 1 1
+% f_trans (nu ([v:name] (P1 v | nu( [x:name] (out_pref v x (out_pref v U (in_pref x P2))))))) X Q.
+
+%query 1 1
+conv (app (lam ([x:exp] x)) (lam ([y:exp] y))) P.
+
+Q1 =
+   [x:name]
+      nu
+         ([v:name]
+             in_pref v ([z:name] in_pref v ([x1:name] out_pref z x1 nil))
+                | nu
+                     ([x3:name]
+                         out_pref v x3
+                            (out_pref v x
+                                (in_pref x3
+                                    ([x4:name]
+                                        in_pref x4
+                                           ([z:name]
+                                               in_pref x4
+                                                  ([x1:name] out_pref z x1 nil))))))).
+ 
+
+
+%query 1 1
+trans (Q1 U) R.
+
+%query 1 1
+conv (app (lam ([x:exp] (app x x))) (lam ([y:exp] y))) P. 
+% conv (lam ([x:exp] x)) P.
+% conv (app (lam ([x:exp] x)) (Y)) P.
+P =
+   [x:name]
+      nu
+         ([v:name]
+             in_pref v
+                ([z:name]
+                    in_pref v
+                       ([x1:name]
+                           nu
+                              ([v1:name]
+                                  out_pref z v1 nil
+                                     | nu
+                                          ([x11:name]
+                                              out_pref v1 x11
+                                                 (out_pref v1 x1
+                                                     (repl_pref x11
+                                                         ([x12:name]
+                                                             out_pref z x12 nil)))))))
+                | nu
+                     ([x9:name]
+                         out_pref v x9
+                            (out_pref v x
+                                (repl_pref x9
+                                    ([x10:name]
+                                        in_pref x10
+                                           ([z:name]
+                                               in_pref x10
+                                                  ([x1:name] out_pref z x1 nil))))))).     
+
+%query 1 1
+trans (P U) R.
+
+% Soundness
+
+% snd : linear E -> eval E V -> conv E P -> conv V Q
+%      -> trans (P X) (Q X) -> type.
+% mode snd +A -D +R -S +T.
+
+% snd_lam : snd A (eval_lam) (conv_lam R1) (conv_lam R1) (trans_1).
+
+% snd_app : snd (ln_app E1 E2) (eval_app D1 D2) (conv_app R1 R2) S T
+
+
+
+% theorem
+% snd : forall* {E:exp} {V:exp} {P : name -> proc}{Q : name -> proc} {x : name}
+%      {R : conv E P} {S : conv V Q} {T : trans (P x) (Q x)}
+%      exists {D : eval E V} true.
+
+
+% prove 5 R (snd A R S T D).
+
+% solve r0 : conv (lam ([x:exp] x)) P.
+% solve s0 : conv (lam ([y:exp] y)) Q.

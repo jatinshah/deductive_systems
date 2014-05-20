@@ -1,0 +1,6 @@
+%theorem 
+ndseq1 : forall {D:nd C} 
+	exists {E:conc C}
+	true.
+
+ndseq2: forall {A:}

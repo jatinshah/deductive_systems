@@ -1,0 +1,67 @@
+\begin{verbatim}
+% Encoding of Processes
+proc : type.
+name : type.
+
+nil           : proc.
+!             : proc -> proc.                         %prefix 11 !.
+tau_pref      : proc -> proc.
+|             : proc -> proc -> proc.                 %infix left 10  |.
++             : proc -> proc -> proc.                 %infix left 9 +.
+nu            : (name -> proc) -> proc.
+match         : name -> name -> proc -> proc.
+mismatch      : name -> name -> proc -> proc.
+in_pref       : name -> (name -> proc) -> proc.
+out_pref      : name -> name -> proc -> proc.
+
+% Encoding of Actions
+f_act : type.		% Free Action
+b_act : type.		% Bound Action
+
+% Free Actions
+tau : f_act.
+out : name -> name -> f_act.
+
+% Bound Actions
+in : name -> b_act.
+bOut : name -> b_act.
+
+
+% Operational semantics of the Pi-calculus
+f_trans : proc -> f_act -> proc -> type.
+b_trans : proc -> b_act -> (name -> proc) -> type.    
+
+
+% Free Actions
+fTAU    : f_trans (tau_pref P) tau P.
+fOUT    : f_trans (out_pref X Y P) (out X Y) P.
+fSUM1   : f_trans P1 A P -> f_trans (P1 + P2) A P.
+fSUM2   : f_trans P2 A P -> f_trans (P1 + P2) A P.
+fPAR1   : f_trans P1 A P -> f_trans (P1 | P2) A (P | P2).
+fPAR2   : f_trans P2 A P -> f_trans (P1 | P2) A (P1 | P).
+fMATCH  : f_trans P A Q -> f_trans (match X X P) A Q.
+fBANG   : f_trans (P | (! P)) A Q -> f_trans (! P) A Q.
+COM1    : b_trans P1 (in X) Q1 -> f_trans P2 (out X Y) Q2 -> 
+          f_trans (P1 | P2) tau ((Q1 Y) | Q2). 
+COM2    : b_trans P2 (in X) Q2 -> f_trans P1 (out X Y) Q1 -> 
+fRES    : ({y:name} f_trans (P y) A (P' y)) -> f_trans (nu P) A (nu P'). 
+CLOSE1  : b_trans P1 (in X) Q1 -> b_trans P2 (bOut X) Q2 -> 
+          f_trans (P1 | P2) tau (nu [Z:name] ((Q1 Z) | (Q2 Z))).
+CLOSE2  : b_trans P2 (in X) Q2 -> b_trans P1 (bOut X) Q1 -> 
+          f_trans (P1 | P2) tau (nu [Z:name] ((Q1 Z) | (Q2 Z))).
+SIMPL1  : f_trans (P | nil) tau P.
+SIMPL2  : f_trans (nil | P) tau P.
+
+% Bound Actions
+IN      : b_trans (in_pref X P) (in X) P.
+bSUM1   : b_trans P1 A P -> b_trans (P1 + P2) A P.
+bSUM2   : b_trans P2 A P -> b_trans (P1 + P2) A P.
+bPAR1   : b_trans P1 A P -> b_trans (P1 | P2) A ([X:name] ((P X) | P2)).
+bPAR2   : b_trans P2 A P -> b_trans (P1 | P2) A ([X:name] (P1 | (P X))).
+bMATCH  : b_trans P A Q -> b_trans (match X X P) A Q.
+bBANG   : b_trans (P | (! P)) A Q -> b_trans (! P) A Q.
+bRES    : ({y:name} b_trans (P y) A (P' y)) -> 
+          b_trans (nu P) A  ([Z:name] (nu (P' Z))).
+OPEN    : ({y:name} f_trans (P1 y) (out X y) (P2 y)) -> 
+          b_trans (nu P1) (bOut X) P2.
+\end{verbatim}

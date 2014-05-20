@@ -1,0 +1,81 @@
+\documentclass[12pt]{article}
+\bibliographystyle{plain}
+\usepackage{stmaryrd}
+\title{Representation of $\lambda$-calculus in $\pi$-calculus}
+\author{Jatin Shah}
+\date{\today}
+
+\newcommand{\trans}[3]{\ensuremath{\displaystyle #1 \stackrel{#2}{\longrightarrow} #3}}
+\newtheorem{thm}{Theorem}[section]
+\begin{document}
+\maketitle
+\section{Introduction}
+$\pi$-calculus was introduced by Robin Milner \cite{PiCalc} as a natural way of representing communicating system. Through its various constructs, $\pi$-calculus can represent concurrency of processes. The Twelf \cite{Twelf} system can be used for proving different properties of various deductive systems. In this paper, I have described the implementation of $\pi$-calculus in Twelf. I have also attempted to represent linear $\lambda$-calculus in $\pi$-calculus and proved some properties of the representation using Twelf.
+\section{$\pi$-Calculus}
+In $\pi$-calculus \cite{PiCalc} there are only two primitive entities: {\it names} and {\it processes}. Let ${\cal N}$ be a infinite set of names, ranged over by $x$ and $y$. The set of processes ${\cal P}$, ranged over by $P$ and $Q$, is defined by following abstract syntax:
+\[ P ::= 0 \> | \> \overline{x}y.P \> | \> x(y).P \> | \> \tau.P \> | \> (\nu x)P \> | \> !P \> | \> (P1|P2) \> | \> P1+P2 \> |\> [x=y]P \> | \> [x \neq y] P\]
+The {\it input prefix} operator $x(y)$ and {\it restriction} operator $(\nu x)$ bind occurences of $y$ in $x(y).P$ and $(\nu y)P$ respectively. The process $!P$ behaves essentially as $P|P|P|\dots$ and the process $[x \neq y]P$ behaves as $P$ if $x$ and $y$ are different names.
+\par There are four actions in $\pi$-calculus, defined by the syntax \[ \alpha ::= \tau \> | \> x(z)\> | \> \overline{x}z \> | \> \overline{x}(z) \] Their intuitive meaning is the following:
+\begin{enumerate}
+\item {\it silent} action: $P \stackrel{\tau}{\longrightarrow} Q$ means that $P$ can reduce itself into $Q$ without interacting with other processes.
+\item {\it free output} action: $P \stackrel{\overline{x}y}{\longrightarrow} Q$ means that $P$ can reduce itself to $Q$ emitting the name $y$ on the channel $x$.
+\item {\it input} action: $P \stackrel{x(z)}{\longrightarrow} Q$ means that $P$ can recieve from the channel $x$ any name $w$ and then evolve into $Q\{w/z\}$.
+\item {\it bound output} action: $P \stackrel{\overline{x}(z)}{\longrightarrow} Q$ means that $P$ can evolve into $Q$ emitting on the channel $x$ a name $z$, which is bound in $P$.
+\end{enumerate}
+\par The late operational semantics \cite{Honsell} of $\pi$-calculus is given in table \ref{tbl:oper}.
+\begin{table}
+\begin{center}
+\begin{tabular}{|lr|}
+\hline
+$IN \frac{\displaystyle -}{\trans{x(z).P}{x(w)}{P\{w/z\}}} \> w \notin fn((\nu z)P)$
+ & $OUT \frac{\displaystyle -}{\trans {\overline{x}y.P}{\overline{x}y} P}$ \\
+$PAR_1 \frac{\trans{P}{\alpha}{P'}}{\trans{P|Q}{\alpha}{P'|Q}} \> bn(\alpha) \cap fn(Q) = \phi$ 
+& $ SUM_1 \frac{\trans{P}{\alpha}{P'}}{\trans{P+Q}{\alpha}{P'}}$ \\
+$PAR_2 \frac{\trans{Q}{\alpha}{Q'}}{\trans{P|Q}{\alpha}{P|Q'}} \> bn(\alpha) \cap fn(P) = \phi$ 
+& $SUM_2 \frac{\trans{Q}{\alpha}{Q'}}{\trans{P+Q}{\alpha}{Q'}}$ \\
+$COM_1 \frac{\trans{P}{x(z)}{P'} \quad \trans{Q}{\overline{x}y}{Q'}}{\trans{P|Q}{\tau}{P'\{y/z\}|Q'}}$ 
+& $COM_2 \frac{\trans{P}{\overline{x}y}{P'} \quad \trans{Q}{x(z)}{Q'}}{\trans{P|Q}{\tau}{P'|Q'\{y/z\}}}$ \\
+$RES \frac{\trans{P}{\alpha}{P'}}{\trans{(\nu y) P}{\alpha}{(\nu y) P'}} \> y \notin n(\alpha)$ 
+& $REPL \frac{\trans{P|!P}{\alpha}{Q}}{\trans{!P}{\alpha}{Q}}$ \\
+$MATCH \frac{\trans{P}{\alpha}{P'}}{\trans{[x=x]P}{\alpha}{P'}}$ 
+& $MISMATCH \frac{\trans{P}{\alpha}{P'}}{\trans{[x \neq y]P}{\alpha}{P'}} \> x \neq y$ \\
+$OPEN \frac{\trans{P}{\overline{x}y}{P'}}{\trans{(\nu y) P}{\overline{x}(w)}{P'\{w/y\}}} \> y \neq x, w \notin fn((\nu y) P')$ 
+& $TAU \frac{-}{\trans{\tau.P}{\tau}{P}}$ \\
+$CLOSE_1 \frac{\trans{P}{x(w)}{P'} \quad \trans{Q}{\overline{x}(w)}{Q'}}{\trans{P|Q}{\tau}{(\nu w)(P'|Q')}}$ 
+& $CLOSE_2 \frac{\trans{P}{\overline{x}(w)}{P'} \quad \trans{Q}{x(w)}{Q'}}{\trans{P|Q}{\tau}{(\nu w)(P'|Q')}}$ \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Late Operational Semantics of $\pi$-calculus}
+\label{tbl:oper}
+\end{table}
+\section{$\lambda$-Calculus in $\pi$-Calculus}
+In $\lambda$-calculus there only terms and variables. Let $\cal V$ denote the set of variables ranged over by $x$. The set of terms, $\Lambda$, ranged over by $M$ is defined by \[ M ::= x \> | \> (\lambda x M) \> | \> (MN) \] The lazy operational semantics of $\lambda$-calculus is defined by 
+\[ \frac{-}{{\lambda x.M} \hookrightarrow {\lambda x.M}} \> ev\_lam\]
+	\[ \frac{M_1 \hookrightarrow \lambda x.M_1' \quad [M_2/x]M_1' \hookrightarrow V}{M_1M_2 \hookrightarrow V}\> ev\_app\]
+	\par In linear $\lambda$-calculus each bound variable occurs only once. Thus, all terms in linear $\lambda$-calculus are linear terms. The translation of linear $\lambda$-calculus into $\pi$-calculus is shown below.
+	\begin{eqnarray*}
+	\llbracket \lambda x.M \rrbracket & \stackrel{def}{=} & u(x)(v).\llbracket M \rrbracket v \\
+	\llbracket x \rrbracket u & \stackrel{def}{=} & \overline{x}u \\
+	\llbracket M N \rrbracket u & \stackrel{def}{=} & (v)(\llbracket M \rrbracket v | (x) \overline{v}xu.x(w). \llbracket N \rrbracket w) \\
+	& & (x \> not \> free \> in \> N) \\
+	\end{eqnarray*}
+	In the agent $\llbracket M \rrbracket u$, $u$ can be considered as pointing to the argument sequence appropriate for a particular occurence of $M$. In other words, if $M$ eventually reduces to a $\lambda$-abstraction $\lambda x.M'$, then the corresponding derivative of $\llbracket M \rrbracket u$ will receive along the link $u$ two names: a pointer to $M$'s first argument, and a pointer to the rest of its argument sequence.
+	\par The double guarding of $\llbracket N \rrbracket$ is the essence of lazy evaluation. The first guard, the prefix $\overline{v}xu$, will be activated only when $M$ has reduced to the form $\lambda xM'$ and is ready for its argument; the second guard $x(w)$ will be activated only when $M'$ calls $N$ via the name $x$; only then may the reduction of $N$ commence.
+\section{$\pi$-Calculus in Twelf}
+Appendix \ref{sec:oper} gives the operational semantics of $\pi$-calculus in Twelf. There three different types of entities: processes, agents and actions. Processes are denoted by {\tt proc} and agents are denoted by {\tt name}. Actions are divided into two types: free actions denoted by {\tt f\_act} and bound actions denoted by {\tt b\_act}.
+\section{Soundness of representation}
+	In this section, I shall state the soundness of the representation of $\lambda$-calculus in $\pi$-calculus. The theorem is proved using Twelf.
+\begin{thm}
+{\bf (Soundness)}For any closed expressions $e$, $v$, processes $P$, $Q$, deductions ${\cal R}:: e \leftrightarrow P$, ${\cal T}::P \hookrightarrow Q$ and ${\cal S} :: Q \Leftrightarrow v$, there exists a deduction ${\cal D} :: e \hookrightarrow v$.
+\end{thm}
+\section*{Appendix}
+\appendix
+\section{Operational Semantics of $\pi$-calculus}
+\label{sec:oper}
+\input{picalculus}
+\section{Representation of $\lambda$-calculus in $\pi$-calculus}
+\label{sec:rep}
+\input{represent}
+\bibliography{picalculus}
+\end{document}

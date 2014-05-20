@@ -1,0 +1,18 @@
+%% Proof of embedding of Natural Deductions
+
+emb : nd C -> conc C -> type.
+
+emb_and : emb (andi D1 D2) (andR E1 E2) <- emb D1 E1 <- emb D2 E2.
+
+emb_or1 : emb (ori1 D1) (orR1 E1) <- emb D1 E1.
+emb_or2 : emb (ori2 D2) (orR2 E2) <- emb D2 E2.
+
+emb_imp : emb (impi ([u:nd A] D)) (impR ([u:conc A] E)) <- emb D E.
+
+emb_not : emb (noti [u:nd A] D) (notR [u:conc A] E) <- emb D E.
+
+emb_true : emb (truei) (trueR).
+
+emb_forall : emb (foralli [a:i] D1) (forallR ([a:i] E1)) <- emb D1 E1.
+
+emb_exists : emb (existsi T (([a:i] D) T)) (existsR T (([a:i] E) T)) <- emb D E.

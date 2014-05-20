@@ -1,0 +1,54 @@
+%% Generates Deduction only if each bound variable (given as hypotheses)
+%% occurs only once.
+
+once : exp -> type.
+
+on_s : once (s E) <- once E.
+
+on_case1 : once (case E1 E2 E3)
+		<- once E1
+		<- closed E2
+		<- ({x:exp} closed (E3 x)).
+
+on_case2 : once (case E1 E2 E3)
+		<- closed E1
+		<- once E2
+		<- ({x:exp} closed (E3 x)).
+
+on_case3 : once (case E1 E2 E3)
+		<- closed E1
+		<- closed E2
+		<- ({x:exp} once (E3 x)).
+		
+on_pair1 : once (pair E1 E2)
+		<- once E1
+		<- closed E2.
+
+on_pair2 : once (pair E1 E2)
+		<- closed E1
+		<- once E2.
+
+on_fst :  once (fst E)
+		<- once E.
+
+on_snd : once (snd E)
+		<- once E.
+
+on_lam : once (lam E)
+		<- ({x:exp} once (E x)).
+
+on_app1 : once (app E1 E2)
+		<- once E1
+		<- closed E2.
+
+on_app2 : once (app E1 E2)
+		<- closed E1
+		<- once E2.
+
+on_letv1 : once (letv E1 E2)
+		<- once E1
+		<- ({x:exp} closed (E2 x)).
+
+on_letv2 : once (letv E1 E2)
+		<- closed E1
+		<- ({x:exp} once (E2 x)).

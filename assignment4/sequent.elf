@@ -1,0 +1,30 @@
+conc : o -> type.
+hyp : o -> type.
+
+init : hyp A  -> conc A.
+
+andR  : conc A -> conc B -> conc (A and B).
+andL1 : (hyp A -> conc C) -> (hyp (A and B) -> conc C).
+andL2 : (hyp B -> conc C) -> (hyp (A and B) -> conc C).
+
+impR  : (hyp A -> conc B) -> conc (A imp B).
+impL  : conc A -> (hyp B -> conc C) -> (hyp (A imp B) -> conc C).
+
+orR1 :  conc A -> conc (A or B).
+orR2 :  conc B -> conc (A or B).
+orL  : (hyp A -> conc C) -> (hyp B ->conc  C) -> (hyp (A or B) -> conc C).
+
+notR : ({p:o} hyp A -> conc p) -> conc (not C).
+notL : conc A -> (hyp (not A) -> conc C).
+
+trueR : conc true.
+
+falseL : hyp false -> {C:o} conc C.
+
+forallR : ({x:i} conc (A x)) -> conc (forall A).
+forallL : ({T:i} hyp (A T) -> conc C) -> (hyp (forall A) -> conc C).
+
+existsR : {T:i} conc (A T) -> conc (exists A).
+existsL : (({x:i} hyp (A x)) -> conc C) -> (hyp (exists A) -> conc C).
+
+cut : conc A -> (hyp A -> conc C) -> conc C.

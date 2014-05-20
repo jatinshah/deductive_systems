@@ -1,0 +1,15 @@
+nat : type.
+0 : nat.
+s : nat -> nat.		%prefix 20 s.
+
+list : type.
+nil : list.
+; : nat -> list -> list.   %infix right 10 ;.
+
+append : list -> list -> list -> type.
+ap_nil : append nil K K.
+ap_cons : append (X ; L) K (X ; M) <- append L K M.
+
+reverse : list -> list -> type.
+rev_nil : reverse nil nil.
+rev_cons : reverse (X ; L) M <- reverse L K <- append  K (X ; nil) M.

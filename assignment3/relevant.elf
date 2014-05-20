@@ -1,0 +1,36 @@
+%% Relevant Expressions
+relevant : exp -> type.
+
+rel_z 	: relevant z.
+
+rel_s 	: relevant (s E) 
+		<- relevant E.
+
+rel_case: relevant (case E1 E2 E3) 
+		<- relevant E1
+		<- relevant E2
+		<- ({x:exp} relevant x -> relevant (E3 x))
+		<- ({x:exp} open x -> open (E3 x)).
+
+rel_pair : relevant (pair E1 E2)
+		<- relevant E1
+		<- relevant E2.
+
+rel_fst : relevant (fst E)
+		<- relevant E.
+
+rel_snd : relevant (snd E)
+		<- relevant E.
+
+rel_lam : relevant (lam E)
+		<- ({x:exp} relevant x -> relevant (E x))
+		<- ({x:exp} open x -> open (E x)).
+
+rel_app : relevant (app E1 E2)
+		<- relevant E1
+		<- relevant E2.
+
+rel_letn : relevant (letn E1 E2)
+		<- relevant E1
+		<- ({x:exp} relevant x -> relevant (E2 x))
+		<- ({x:exp} open x -> open (E2 x)).
